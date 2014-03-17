@@ -45,7 +45,7 @@ class Steerable:
 			lutsize = 1024
 			Xcosn = np.pi * np.array(range(-(2*lutsize+1),(lutsize+1)))/lutsize
 			order = self.nbands - 1
-			const = np.power(2, 2*order) * sc.factorial(order*order) / (self.nbands * sc.factorial(2*order))
+			const = np.power(2, 2*order) * np.square(sc.factorial(order)) / (self.nbands * sc.factorial(2*order))
 			Ycosn = np.sqrt(const) * np.power(np.cos(Xcosn), order)
 
 			orients = []
@@ -59,8 +59,8 @@ class Steerable:
 			# ================== Subsample lowpass ============================
 			dims = np.array(lodft.shape)
 			
-			lostart = np.ceil((dims+0.5)/2) - np.ceil((np.ceil((dims-0.5)/2)+0.5)/2) + 1
-			loend = lostart + np.ceil((dims-0.5)/2)
+			lostart = np.ceil((dims+0.5)/2) - np.ceil((np.ceil((dims-0.5)/2)+0.5)/2) 
+			loend = lostart + np.ceil((dims-0.5)/2) 
 
 			log_rad = log_rad[lostart[0]:loend[0], lostart[1]:loend[1]]
 			angle = angle[lostart[0]:loend[0], lostart[1]:loend[1]]
