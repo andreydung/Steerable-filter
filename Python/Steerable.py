@@ -25,7 +25,7 @@ class Steerable:
 		hi0dft = imdft * hi0mask
 		hi0 = np.fft.ifft2(np.fft.ifftshift(hi0dft))
 
-		coeff.append(hi0.real)
+		coeff.insert(0, hi0.real)
 
 		return coeff
 
@@ -43,7 +43,7 @@ class Steerable:
 			himask = self.pointOp(log_rad, Yrcos, Xrcos)
 
 			lutsize = 1024
-			Xcosn = np.pi * np.array(range(-(2*lutsize+1),(lutsize+1)))/lutsize
+			Xcosn = np.pi * np.array(range(-(2*lutsize+1),(lutsize+2)))/lutsize
 			order = self.nbands - 1
 			const = np.power(2, 2*order) * np.square(sc.factorial(order)) / (self.nbands * sc.factorial(2*order))
 			Ycosn = np.sqrt(const) * np.power(np.cos(Xcosn), order)
@@ -71,9 +71,73 @@ class Steerable:
 			lodft = lomask * lodft
 
 			coeff = self.buildSFpyrlevs(lodft, log_rad, angle, Xrcos, Yrcos, ht-1)
-			coeff.append(orients)
+			coeff.insert(0, orients)
 
 		return coeff
+
+	def reconSFPyrLevs(self, coeff, log_rad, Xrcos, Yrcos, angle):
+
+		if (len(coeff) == 1):
+			return np.fft.fftshift(np.fft.fft2(coeff[0]))
+
+		else:
+			Xrcos = Xrcos - 1
+    		
+    		# ========================== Orientation residue==========================
+			himask = self.pointOp(log_rad, Yrcos, Xrcos)
+
+			lutsize = 1024
+			Xcosn = np.pi * np.array(range(-(2*lutsize+1),(lutsize+2)))/lutsize
+			order = self.nbands - 1
+			const = np.power(2, 2*order) * np.square(sc.factorial(order)) / (self.nbands * sc.factorial(2*order))
+			Ycosn = np.sqrt(const) * np.power(np.cos(Xcosn), order)
+
+			orientdft = np.zeros(coeff[0][0].shape)
+
+			for b in range(self.nbands):
+				anglemask = self.pointOp(angle, Ycosn, Xcosn + np.pi* b/self.nbands)
+				banddft = np.fft.fftshift(np.fft.fft2(coeff[0][b]))
+				orientdft = orientdft + np.power(np.complex(0,1), order) * banddft * anglemask * himask
+
+			# ============== Lowpass component are upsampled and convoluted ============
+			dims = np.array(coeff[0][0].shape)
+			
+			lostart = np.ceil((dims+0.5)/2) - np.ceil((np.ceil((dims-0.5)/2)+0.5)/2) 
+			loend = lostart + np.ceil((dims-0.5)/2) 
+
+			nlog_rad = log_rad[lostart[0]:loend[0], lostart[1]:loend[1]]
+			nangle = angle[lostart[0]:loend[0], lostart[1]:loend[1]]
+			YIrcos = np.sqrt(np.abs(1 - Yrcos * Yrcos))
+			lomask = self.pointOp(nlog_rad, YIrcos, Xrcos)
+
+			nresdft = self.reconSFPyrLevs(coeff[1:], nlog_rad, Xrcos, Yrcos, nangle)
+
+			resdft = np.zeros(dims)
+			resdft[lostart[0]:loend[0], lostart[1]:loend[1]] = nresdft * lomask
+
+			return resdft.real
+
+	def reconSFpyr(self, coeff):
+
+		# if (self.nbands != len(coeff[1])):
+		# 	raise Exception("Unmatched number of orientations")
+
+		M, N = coeff[0].shape
+		log_rad, angle = self.base(M, N)
+
+		Xrcos, Yrcos = self.rcosFn(1, -0.5)
+		Yrcos = np.sqrt(Yrcos)
+		YIrcos = np.sqrt(np.abs(1 - Yrcos*Yrcos))
+
+		lo0mask = self.pointOp(log_rad, YIrcos, Xrcos)
+		hi0mask = self.pointOp(log_rad, Yrcos, Xrcos)
+
+		tempdft = self.reconSFPyrLevs(coeff[1:], log_rad, Xrcos, Yrcos, angle)
+
+		hidft = np.fft.fftshift(np.fft.fft2(coeff[0]))
+		outdft = tempdft * lo0mask + hidft * hi0mask
+
+		return np.fft.ifft2(np.fft.ifftshift(outdft)).real
 
 
 	def base(self, m, n):
