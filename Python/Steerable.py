@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.misc as sc
 
+import cv2
+
 class Steerable:
 	def __init__(self, height = 3):
 		self.nbands = 4
@@ -31,7 +33,6 @@ class Steerable:
 
 
 	def buildSFpyrlevs(self, lodft, log_rad, angle, Xrcos, Yrcos, ht):
-		
 		if (ht <=1):
 			lo0 = np.fft.ifft2(np.fft.ifftshift(lodft))
 			coeff = [lo0.real]
@@ -81,6 +82,7 @@ class Steerable:
 			return np.fft.fftshift(np.fft.fft2(coeff[0]))
 
 		else:
+
 			Xrcos = Xrcos - 1
     		
     		# ========================== Orientation residue==========================
@@ -112,15 +114,17 @@ class Steerable:
 
 			nresdft = self.reconSFPyrLevs(coeff[1:], nlog_rad, Xrcos, Yrcos, nangle)
 
-			resdft = np.zeros(dims)
+			res = np.fft.fftshift(np.fft.fft2(nresdft))
+
+			resdft = np.zeros(dims, 'complex')
 			resdft[lostart[0]:loend[0], lostart[1]:loend[1]] = nresdft * lomask
 
-			return resdft.real
+			return resdft + orientdft
 
 	def reconSFpyr(self, coeff):
 
-		# if (self.nbands != len(coeff[1])):
-		# 	raise Exception("Unmatched number of orientations")
+		if (self.nbands != len(coeff[1])):
+			raise Exception("Unmatched number of orientations")
 
 		M, N = coeff[0].shape
 		log_rad, angle = self.base(M, N)
@@ -137,7 +141,7 @@ class Steerable:
 		hidft = np.fft.fftshift(np.fft.fft2(coeff[0]))
 		outdft = tempdft * lo0mask + hidft * hi0mask
 
-		return np.fft.ifft2(np.fft.ifftshift(outdft)).real
+		return np.fft.ifft2(np.fft.ifftshift(outdft)).real.astype(int)
 
 
 	def base(self, m, n):
