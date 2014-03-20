@@ -1,8 +1,6 @@
 import numpy as np
 import scipy.misc as sc
 
-import cv2
-
 class Steerable:
 	def __init__(self, height = 3):
 		self.nbands = 4
