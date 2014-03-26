@@ -1,4 +1,5 @@
 # import Steerable.Steerable as Steerable
+from __future__ import division
 import numpy as np
 import scipy.signal as sc
 import Steerable as Steerable
@@ -44,8 +45,8 @@ class Metric:
 		window = fspecial()
 		window /= window.sum()
 
-		mu1   = sc.convolve2d( img1, window, mode ='valid')
-		mu2   = sc.convolve2d( img2, window, mode = 'valid')
+		mu1 = sc.convolve2d( img1, window, mode ='valid')
+		mu2 = sc.convolve2d( img2, window, mode = 'valid')
 
 		mu1_sq = mu1 * mu1
 		mu2_sq = mu2 * mu2
@@ -130,7 +131,7 @@ class Metric:
 		sigma22_sq = sc.convolve2d(im22*im22, window2, mode = 'valid') - mu22*mu22
 
 		sigma1_cross = sc.convolve2d(im11*np.conj(im12), window2, mode = 'valid') - mu11*np.conj(mu12)
-		sigma2_cross = sc.convolve2d(im21*np.conj(im22), window2, mode = 'valid') - mu21*np.conj(mu12)
+		sigma2_cross = sc.convolve2d(im21*np.conj(im22), window2, mode = 'valid') - mu21*np.conj(mu22)
 
 		rho1 = (sigma1_cross + C)/(np.sqrt(sigma11_sq)*np.sqrt(sigma12_sq) + C)
 		rho2 = (sigma2_cross + C)/(np.sqrt(sigma21_sq)*np.sqrt(sigma22_sq) + C)
@@ -160,7 +161,7 @@ class Metric:
 		sigma22_sq = sc.convolve2d(im22*im22, window2, mode = 'valid') - mu22*mu22
 
 		sigma1_cross = sc.convolve2d(im11*np.conj(im12), window2, mode = 'valid') - mu11*np.conj(mu12)
-		sigma2_cross = sc.convolve2d(im21*np.conj(im22), window2, mode = 'valid') - mu21*np.conj(mu12)
+		sigma2_cross = sc.convolve2d(im21*np.conj(im22), window2, mode = 'valid') - mu21*np.conj(mu22)
 
 		rho1 = (sigma1_cross + C)/(np.sqrt(sigma11_sq)*np.sqrt(sigma12_sq) + C)
 		rho2 = (sigma2_cross + C)/(np.sqrt(sigma21_sq)*np.sqrt(sigma22_sq) + C)

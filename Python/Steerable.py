@@ -2,7 +2,7 @@ import numpy as np
 import scipy.misc as sc
 
 class Steerable:
-	def __init__(self, height = 3):
+	def __init__(self, height = 4):
 		self.nbands = 4
 		self.height = height
 		self.isSample = True
