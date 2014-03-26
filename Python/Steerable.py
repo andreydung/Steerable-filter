@@ -5,6 +5,7 @@ class Steerable:
 	def __init__(self, height = 3):
 		self.nbands = 4
 		self.height = height
+		self.isSample = True
 
 	def buildSFpyr(self, im):
 
@@ -29,6 +30,10 @@ class Steerable:
 
 		return coeff
 
+	def getlist(self, coeff):
+		straight = [bands for scale in coeff[1:-1] for bands in scale]
+		straight = [coeff[0]] + straight + [coeff[-1]]
+		return straight
 
 	def buildSFpyrlevs(self, lodft, log_rad, angle, Xrcos, Yrcos, ht):
 		if (ht <=1):
