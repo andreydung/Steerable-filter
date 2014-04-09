@@ -1,8 +1,8 @@
 # import Steerable.Steerable as Steerable
 from __future__ import division
 import numpy as np
-import scipy.signal as sc
 import Steerable as Steerable
+import cv2
 
 def mse(img1, img2):
 	return ((img2 - img1)**2).mean()
@@ -45,20 +45,27 @@ class Metric:
 		window = fspecial()
 		window /= window.sum()
 
-		mu1 = sc.convolve2d( img1, window, mode ='valid')
-		mu2 = sc.convolve2d( img2, window, mode = 'valid')
+		mu1 = self.conv( img1, window)
+		mu2 = self.conv( img2, window)
 
 		mu1_sq = mu1 * mu1
 		mu2_sq = mu2 * mu2
 		mu1_mu2 = mu1 * mu2
 		
-		sigma1_sq = sc.convolve2d( img1*img1, window,  mode = 'valid') - mu1_sq;
-		sigma2_sq = sc.convolve2d( img2*img2, window,  mode = 'valid') - mu2_sq;
-		sigma12 = sc.convolve2d( img1*img2, window, mode = 'valid') - mu1_mu2;
+		sigma1_sq = self.conv( img1*img1, window) - mu1_sq;
+		sigma2_sq = self.conv( img2*img2, window) - mu2_sq;
+		sigma12 = self.conv( img1*img2, window) - mu1_mu2;
 
 		ssim_map = 	((2*mu1_mu2 + C1)*(2*sigma12 + C2))/((mu1_sq + mu2_sq + C1)*(sigma1_sq + sigma2_sq + C2))
 
 		return ssim_map.mean()
+
+	def conv(self, a, b):
+		"""
+		Larger matrix go first
+		"""
+		return cv2.filter2D(a, -1, b, anchor = (0,0))\
+			[:(a.shape[0]-b.shape[0]+1), :(a.shape[1]-b.shape[1]+1), -1]
 
 	def STSIM(self, im1, im2):
 		s = Steerable.Steerable()
@@ -86,8 +93,8 @@ class Metric:
 		win = self.win
 		C = 0.001
 		window = fspecial(win, win/6)
-		mu1 = np.abs(sc.convolve2d(im1, window, mode = 'valid'))
-		mu2 = np.abs(sc.convolve2d(im2, window, mode = 'valid'))
+		mu1 = np.abs(self.conv(im1, window))
+		mu2 = np.abs(self.conv(im2, window))
 
 		Lmap = (2 * mu1 * mu2 + C)/(mu1*mu1 + mu2*mu2 + C)
 		return Lmap
@@ -98,12 +105,12 @@ class Metric:
 		win = self.win
 		C = 0.001
 		window = fspecial(win, win/6)
-		mu1 = np.abs(sc.convolve2d(im1, window, mode = 'valid'))
-		mu2 = np.abs(sc.convolve2d(im2, window, mode = 'valid'))
+		mu1 = np.abs(self.conv(im1, window))
+		mu2 = np.abs(self.conv(im2, window))
 
-		sigma1_sq = sc.convolve2d(im1*im1, window, mode = 'valid') - mu1 * mu1
+		sigma1_sq = self.conv(im1*im1, window) - mu1 * mu1
 		sigma1 = np.sqrt(sigma1_sq)
-		sigma2_sq = sc.convolve2d(im2*im2, window, mode = 'valid') - mu2 * mu2
+		sigma2_sq = self.conv(im2*im2, window) - mu2 * mu2
 		sigma2 = np.sqrt(sigma2_sq)
 
 		Cmap = (2*sigma1*sigma2 + C)/(sigma1_sq + sigma2_sq + C)
@@ -120,18 +127,18 @@ class Metric:
 		im21 = im2[:, :-1]
 		im22 = im2[:, 1:]
 
-		mu11 = sc.convolve2d(im11, window2, mode = 'valid')
-		mu12 = sc.convolve2d(im12, window2, mode = 'valid')
-		mu21 = sc.convolve2d(im21, window2, mode = 'valid')
-		mu22 = sc.convolve2d(im22, window2, mode = 'valid')
+		mu11 = self.conv(im11, window2)
+		mu12 = self.conv(im12, window2)
+		mu21 = self.conv(im21, window2)
+		mu22 = self.conv(im22, window2)
 
-		sigma11_sq = sc.convolve2d(im11*im11, window2, mode = 'valid') - mu11*mu11
-		sigma12_sq = sc.convolve2d(im12*im12, window2, mode = 'valid') - mu12*mu12
-		sigma21_sq = sc.convolve2d(im21*im21, window2, mode = 'valid') - mu21*mu21
-		sigma22_sq = sc.convolve2d(im22*im22, window2, mode = 'valid') - mu22*mu22
+		sigma11_sq = self.conv(im11*im11, window2) - mu11*mu11
+		sigma12_sq = self.conv(im12*im12, window2) - mu12*mu12
+		sigma21_sq = self.conv(im21*im21, window2) - mu21*mu21
+		sigma22_sq = self.conv(im22*im22, window2) - mu22*mu22
 
-		sigma1_cross = sc.convolve2d(im11*np.conj(im12), window2, mode = 'valid') - mu11*np.conj(mu12)
-		sigma2_cross = sc.convolve2d(im21*np.conj(im22), window2, mode = 'valid') - mu21*np.conj(mu22)
+		sigma1_cross = self.conv(im11*np.conj(im12), window2) - mu11*np.conj(mu12)
+		sigma2_cross = self.conv(im21*np.conj(im22), window2) - mu21*np.conj(mu22)
 
 		rho1 = (sigma1_cross + C)/(np.sqrt(sigma11_sq)*np.sqrt(sigma12_sq) + C)
 		rho2 = (sigma2_cross + C)/(np.sqrt(sigma21_sq)*np.sqrt(sigma22_sq) + C)
@@ -150,18 +157,18 @@ class Metric:
 		im21 = im2[:-1, :]
 		im22 = im2[1:, :]
 
-		mu11 = sc.convolve2d(im11, window2, mode = 'valid')
-		mu12 = sc.convolve2d(im12, window2, mode = 'valid')
-		mu21 = sc.convolve2d(im21, window2, mode = 'valid')
-		mu22 = sc.convolve2d(im22, window2, mode = 'valid')
+		mu11 = self.conv(im11, window2)
+		mu12 = self.conv(im12, window2)
+		mu21 = self.conv(im21, window2)
+		mu22 = self.conv(im22, window2)
 
-		sigma11_sq = sc.convolve2d(im11*im11, window2, mode = 'valid') - mu11*mu11
-		sigma12_sq = sc.convolve2d(im12*im12, window2, mode = 'valid') - mu12*mu12
-		sigma21_sq = sc.convolve2d(im21*im21, window2, mode = 'valid') - mu21*mu21
-		sigma22_sq = sc.convolve2d(im22*im22, window2, mode = 'valid') - mu22*mu22
+		sigma11_sq = self.conv(im11*im11, window2) - mu11*mu11
+		sigma12_sq = self.conv(im12*im12, window2) - mu12*mu12
+		sigma21_sq = self.conv(im21*im21, window2) - mu21*mu21
+		sigma22_sq = self.conv(im22*im22, window2) - mu22*mu22
 
-		sigma1_cross = sc.convolve2d(im11*np.conj(im12), window2, mode = 'valid') - mu11*np.conj(mu12)
-		sigma2_cross = sc.convolve2d(im21*np.conj(im22), window2, mode = 'valid') - mu21*np.conj(mu22)
+		sigma1_cross = self.conv(im11*np.conj(im12), window2) - mu11*np.conj(mu12)
+		sigma2_cross = self.conv(im21*np.conj(im22), window2) - mu21*np.conj(mu22)
 
 		rho1 = (sigma1_cross + C)/(np.sqrt(sigma11_sq)*np.sqrt(sigma12_sq) + C)
 		rho2 = (sigma2_cross + C)/(np.sqrt(sigma21_sq)*np.sqrt(sigma22_sq) + C)
@@ -169,3 +176,27 @@ class Metric:
 
 		return C10map
 
+	# def compute_cross_term(self, im11, im12, im21, im22):
+
+	# 	C = 0.001;
+	# 	window2 = 1/(win**2)*np.ones((win, win));
+
+	# 	mu11 = (filter2(window2,im11,'valid'));
+	# 	mu12 = (filter2(window2,im12,'valid'));
+
+	# 	mu21 = (filter2(window2,im21,'valid'));
+	# 	mu22 = (filter2(window2,im22,'valid'));
+
+
+	# 	sigma11_sq = filter2(window2, (im11*im11), 'valid') - (mu11.*mu11);
+	# 	sigma12_sq = filter2(window2, (im12.*im12), 'valid') - (mu12.*mu12);
+	# 	sigma21_sq = filter2(window2, (im21.*im21), 'valid') - (mu21.*mu21);
+	# 	sigma22_sq = filter2(window2, (im22.*im22), 'valid') - (mu22.*mu22);
+	# 	sigma1_cross = filter2(window2,im11.*(im12),'valid') - mu11.*(mu12);
+	# 	sigma2_cross = filter2(window2,im21.*(im22),'valid') - mu21.*(mu22);
+
+	# 	rho1 = (sigma1_cross + C)./(sqrt(sigma11_sq).*sqrt(sigma12_sq) + C);
+	# 	rho2 = (sigma2_cross + C)./(sqrt(sigma21_sq).*sqrt(sigma22_sq) + C);
+
+	# 	Crossmap = 1 - 0.5*abs(rho1 - rho2);
+	# 	return Crossmap
