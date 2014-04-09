@@ -65,7 +65,7 @@ class Metric:
 		Larger matrix go first
 		"""
 		return cv2.filter2D(a, -1, b, anchor = (0,0))\
-			[:(a.shape[0]-b.shape[0]+1), :(a.shape[1]-b.shape[1]+1), -1]
+			[:(a.shape[0]-b.shape[0]+1), :(a.shape[1]-b.shape[1]+1)]
 
 	def STSIM(self, im1, im2):
 		s = Steerable.Steerable()
