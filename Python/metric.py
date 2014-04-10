@@ -34,7 +34,7 @@ class Metric:
 	def __init__(self):
 		self.win = 7
 
-	def ssim(self, img1, img2, K = (0.01, 0.03), L = 255):
+	def SSIM(self, img1, img2, K = (0.01, 0.03), L = 255):
 
 		img1 = img1.astype(float)
 		img2 = img2.astype(float)
@@ -70,22 +70,54 @@ class Metric:
 	def STSIM(self, im1, im2):
 		s = Steerable.Steerable()
 
-		pyrA = s.buildSFpyr(im1)
-		pyrB = s.buildSFpyr(im2)
-
-		pyrA = s.getlist(pyrA)
-		pyrB = s.getlist(pyrB)
+		pyrA = s.getlist(s.buildSFpyr(im1))
+		pyrB = s.getlist(s.buildSFpyr(im2))
 
 		stsim = map(self.pooling, pyrA, pyrB)
-
 		return np.mean(stsim)
+
+	def STSIM2(self, im1, im2):
+		s = Steerable.Steerable()
+		s_nosub = Steerable.Steerable_noSub()
+
+		pyrA = s.getlist(s.buildSFpyr(im1))
+		pyrB = s.getlist(s.buildSFpyr(im2))
+		stsim2 = map(self.pooling, pyrA, pyrB)
+
+		# Add cross terms
+		pyrA_nosub = s_nosub.buildSFpyr(im1)
+		pyrB_nosub = s_nosub.buildSFpyr(im2)
+
+		for scale in range(2, len(pyrA_nosub)-1):
+			for orient in range(len(pyrA_nosub[1])):
+
+				im11 = np.abs(pyrA_nosub[scale - 1][orient])
+				im12 = np.abs(pyrA_nosub[scale][orient])
+				
+				im21 = np.abs(pyrB_nosub[scale - 1][orient])
+				im22 = np.abs(pyrB_nosub[scale][orient])
+
+				# im13 = np.abs(pyrA_nosub[scale+1][orient])
+				# im23 = np.abs(pyrB_nosub[scale+1][orient])
+
+				stsim2.append(self.compute_cross_term(im11, im12, im21, im22).mean())
+				# stsim2.append(self.compute_cross_term(im13, im12, im23, im22))
+
+		return np.mean(stsim2)
+
+
+	def STSIM_Maha(self, im1, im2):
+		s = Steerable.Steerable()
+		featureA = s.feature(im1)
+		featureB = s.feature(im2)
+		return np.linalg.norm(featureA - featureB)
 
 	def pooling(self, im1, im2):
 		win = self.win
-		tmp = self.compute_L_term(im1, im2) * self.compute_C_term(im1, im2) * \
-			self.compute_C01_term(im1, im2) * self.compute_C10_term(im1, im2)
+		tmp = np.power(self.compute_L_term(im1, im2) * self.compute_C_term(im1, im2) * \
+			self.compute_C01_term(im1, im2) * self.compute_C10_term(im1, im2), 0.25)
 
-		return np.power(tmp.mean(), 0.25)
+		return tmp.mean()
 
 	def compute_L_term(self, im1, im2):
 		assert ((im1.dtype == float) and (im2.dtype == float))
@@ -176,27 +208,25 @@ class Metric:
 
 		return C10map
 
-	# def compute_cross_term(self, im11, im12, im21, im22):
+	def compute_cross_term(self, im11, im12, im21, im22):
 
-	# 	C = 0.001;
-	# 	window2 = 1/(win**2)*np.ones((win, win));
+		C = 0.001;
+		window2 = 1/(self.win**2)*np.ones((self.win, self.win));
 
-	# 	mu11 = (filter2(window2,im11,'valid'));
-	# 	mu12 = (filter2(window2,im12,'valid'));
+		mu11 = self.conv(im11, window2);
+		mu12 = self.conv(im12, window2);
+		mu21 = self.conv(im21, window2);
+		mu22 = self.conv(im22, window2);
 
-	# 	mu21 = (filter2(window2,im21,'valid'));
-	# 	mu22 = (filter2(window2,im22,'valid'));
+		sigma11_sq = self.conv((im11*im11), window2) - (mu11*mu11);
+		sigma12_sq = self.conv((im12*im12), window2) - (mu12*mu12);
+		sigma21_sq = self.conv((im21*im21), window2) - (mu21*mu21);
+		sigma22_sq = self.conv((im22*im22), window2) - (mu22*mu22);
+		sigma1_cross = self.conv(im11*im12, window2) - mu11*(mu12);
+		sigma2_cross = self.conv(im21*im22, window2) - mu21*(mu22);
 
+		rho1 = (sigma1_cross + C)/(np.sqrt(sigma11_sq)*np.sqrt(sigma12_sq) + C);
+		rho2 = (sigma2_cross + C)/(np.sqrt(sigma21_sq)*np.sqrt(sigma22_sq) + C);
 
-	# 	sigma11_sq = filter2(window2, (im11*im11), 'valid') - (mu11.*mu11);
-	# 	sigma12_sq = filter2(window2, (im12.*im12), 'valid') - (mu12.*mu12);
-	# 	sigma21_sq = filter2(window2, (im21.*im21), 'valid') - (mu21.*mu21);
-	# 	sigma22_sq = filter2(window2, (im22.*im22), 'valid') - (mu22.*mu22);
-	# 	sigma1_cross = filter2(window2,im11.*(im12),'valid') - mu11.*(mu12);
-	# 	sigma2_cross = filter2(window2,im21.*(im22),'valid') - mu21.*(mu22);
-
-	# 	rho1 = (sigma1_cross + C)./(sqrt(sigma11_sq).*sqrt(sigma12_sq) + C);
-	# 	rho2 = (sigma2_cross + C)./(sqrt(sigma21_sq).*sqrt(sigma22_sq) + C);
-
-	# 	Crossmap = 1 - 0.5*abs(rho1 - rho2);
-	# 	return Crossmap
+		Crossmap = 1 - 0.5*abs(rho1 - rho2);
+		return Crossmap

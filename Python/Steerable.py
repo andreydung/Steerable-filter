@@ -35,6 +35,13 @@ class Steerable:
 		straight = [coeff[0]] + straight + [coeff[-1]]
 		return straight
 
+	def feature(self, im):
+		s = self.getlist(self.buildSFpyr(im))
+		feature = []
+		for i in range(len(s)):
+			feature.append(np.var(s[i]))
+		return np.asarray(feature)
+
 	def buildSFpyrlevs(self, lodft, log_rad, angle, Xrcos, Yrcos, ht):
 		if (ht <=1):
 			lo0 = np.fft.ifft2(np.fft.ifftshift(lodft))
@@ -176,3 +183,50 @@ class Steerable:
 	def pointOp(self, im, Y, X):
 		out = np.interp(im.flatten(), X, Y)
 		return np.reshape(out, im.shape)
+
+
+
+
+class Steerable_noSub(Steerable):
+
+	def buildSFpyrlevs(self, lodft, log_rad, angle, Xrcos, Yrcos, ht):
+		if (ht <=1):
+			lo0 = np.fft.ifft2(np.fft.ifftshift(lodft))
+			coeff = [lo0.real]
+		
+		else:
+			Xrcos = Xrcos - 1
+
+			# ==================== Orientation bandpass =======================
+			himask = self.pointOp(log_rad, Yrcos, Xrcos)
+
+			lutsize = 1024
+			Xcosn = np.pi * np.array(range(-(2*lutsize+1),(lutsize+2)))/lutsize
+			order = self.nbands - 1
+			const = np.power(2, 2*order) * np.square(sc.factorial(order)) / (self.nbands * sc.factorial(2*order))
+			Ycosn = np.sqrt(const) * np.power(np.cos(Xcosn), order)
+
+			orients = []
+
+			for b in range(self.nbands):
+				anglemask = self.pointOp(angle, Ycosn, Xcosn + np.pi*b/self.nbands)
+				banddft = np.complex(0,1) * lodft * anglemask * himask
+				band = np.fft.ifft2(np.fft.ifftshift(banddft))
+				orients.append(band.real)
+
+			# ================== Subsample lowpass ============================
+			lostart = (0, 0)
+			loend = lodft.shape
+
+			log_rad = log_rad[lostart[0]:loend[0], lostart[1]:loend[1]]
+			angle = angle[lostart[0]:loend[0], lostart[1]:loend[1]]
+			lodft = lodft[lostart[0]:loend[0], lostart[1]:loend[1]]
+			YIrcos = np.abs(np.sqrt(1 - Yrcos*Yrcos))
+			lomask = self.pointOp(log_rad, YIrcos, Xrcos)
+
+			lodft = lomask * lodft
+
+			coeff = self.buildSFpyrlevs(lodft, log_rad, angle, Xrcos, Yrcos, ht-1)
+			coeff.insert(0, orients)
+
+		return coeff
