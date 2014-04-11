@@ -68,6 +68,7 @@ class Metric:
 		pyrB = s.getlist(s.buildSFpyr(im2))
 
 		stsim = map(self.pooling, pyrA, pyrB)
+
 		return np.mean(stsim)
 
 	def STSIM2(self, im1, im2):
@@ -91,11 +92,9 @@ class Metric:
 				im21 = np.abs(pyrB_nosub[scale - 1][orient])
 				im22 = np.abs(pyrB_nosub[scale][orient])
 
-				# im13 = np.abs(pyrA_nosub[scale+1][orient])
-				# im23 = np.abs(pyrB_nosub[scale+1][orient])
-
 				stsim2.append(self.compute_cross_term(im11, im12, im21, im22).mean())
-				# stsim2.append(self.compute_cross_term(im13, im12, im23, im22))
+
+		print stsim2
 
 		return np.mean(stsim2)
 
