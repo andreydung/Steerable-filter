@@ -44,13 +44,12 @@ class Metric:
 
 		mu1_sq = mu1 * mu1
 		mu2_sq = mu2 * mu2
-		mu1_mu2 = mu1 * mu2
 		
 		sigma1_sq = self.conv( img1*img1, window) - mu1_sq;
 		sigma2_sq = self.conv( img2*img2, window) - mu2_sq;
 		sigma12 = self.conv( img1*img2, window) - mu1_mu2;
 
-		ssim_map = 	((2*mu1_mu2 + C1)*(2*sigma12 + C2))/((mu1_sq + mu2_sq + C1)*(sigma1_sq + sigma2_sq + C2))
+		ssim_map = 	((2 *mu1 *mu2 + C1)*(2*sigma12 + C2))/((mu1_sq + mu2_sq + C1)*(sigma1_sq + sigma2_sq + C2))
 
 		return ssim_map.mean()
 
@@ -93,8 +92,6 @@ class Metric:
 				im22 = np.abs(pyrB_nosub[scale][orient])
 
 				stsim2.append(self.compute_cross_term(im11, im12, im21, im22).mean())
-
-		print stsim2
 
 		return np.mean(stsim2)
 

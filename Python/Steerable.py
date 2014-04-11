@@ -43,6 +43,7 @@ class Steerable:
 		s = self.getlist(self.buildSFpyr(im))
 		feature = []
 		for i in range(len(s)):
+			feature.append(np.mean(s[i]))
 			feature.append(np.var(s[i]))
 		return np.asarray(feature)
 
