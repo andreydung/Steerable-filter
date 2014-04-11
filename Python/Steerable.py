@@ -214,9 +214,9 @@ class Steerable_noSub(Steerable):
 
 			for b in range(self.nbands):
 				anglemask = self.pointOp(angle, Ycosn, Xcosn + np.pi*b/self.nbands)
-				banddft = np.complex(0,1) * lodft * anglemask * himask
+				banddft = np.complex(0, np.power(-1, order)) * lodft * anglemask * himask
 				band = np.fft.ifft2(np.fft.ifftshift(banddft))
-				orients.append(band.real)
+				orients.append(band)
 
 			# ================== Subsample lowpass ============================
 			lostart = (0, 0)

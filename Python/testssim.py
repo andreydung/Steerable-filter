@@ -58,12 +58,14 @@ ss = Metric()
 # print coeff[3].shape
 
 # TEST STSIM 
-# im1 = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
-# im2 = cv2.imread('images/02.tif', cv2.IMREAD_GRAYSCALE)
+im1 = cv2.imread('images/10.tif', cv2.IMREAD_GRAYSCALE)
+im2 = cv2.imread('images/02.tif', cv2.IMREAD_GRAYSCALE)
 
-# result1 = ss.STSIM2(im1, im2)
-# print result1
+result1 = ss.STSIM(im1, im2)
+print result1
 
+result2 = mlab.stsim2(im1, im2)
+print result2
 # print ss.STSIM_Maha(im1, im1)
 
 # TEST STeerable
@@ -98,3 +100,17 @@ ss = Metric()
 # loMatlab = mlab.get_pyramid_noSub(M,N)
 
 # np.testing.assert_almost_equal(loMatlab, lo0mask)
+
+
+# TEST No subsampling Steerable
+
+# ss = Steerable_noSub(height = 3)
+# im = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
+# coeff = ss.buildSFpyr(im)
+
+# bandmatlab = mlab.get_pyramid_noSub(im, 1, 4)
+
+# print bandmatlab
+# print coeff[1][0]
+# np.testing.assert_almost_equal(bandmatlab, coeff[1][0])
+
