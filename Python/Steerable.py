@@ -1,8 +1,12 @@
+from __future__ import division
 import numpy as np
 import scipy.misc as sc
 
 class Steerable:
 	def __init__(self, height = 4):
+		"""
+		height is the total height, including highpass and lowpass
+		"""
 		self.nbands = 4
 		self.height = height
 		self.isSample = True
@@ -155,14 +159,14 @@ class Steerable:
 
 
 	def base(self, m, n):
-		ctrm = np.ceil(float(m/2))
-		ctrn = np.ceil(float(n/2))
+		ctrm = np.ceil((m + 0.5)/2)
+		ctrn = np.ceil((n + 0.5)/2)
 
-		xv, yv = np.meshgrid(	(range(1,m+1) - ctrm)/float(m/2),\
-								(range(1,n+1) - ctrm)/float(n/2))
+		xv, yv = np.meshgrid(	(np.array(range(m)) + 1 - ctrm)/(m/2),\
+								(np.array(range(n)) + 1 - ctrm)/(n/2))
 
 		rad = np.sqrt(xv**2 + yv**2)
-		rad[m/2-1, n/2-1] = rad[m/2-1, n/2-2]
+		rad[ctrm - 1, ctrn-1] = rad[ctrm - 1, ctrn - 2]
 		log_rad = np.log2(rad)
 
 		angle = np.arctan2(yv, xv)

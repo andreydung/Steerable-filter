@@ -23,12 +23,6 @@ def fspecial(win = 11, sigma = 1.5):
 		h /= sumh
 	return h
 
-def STSIM_M(im1, im2):
-	pass
-
-def STSIM2(im1, im2):
-	pass
-
 class Metric:
 
 	def __init__(self):

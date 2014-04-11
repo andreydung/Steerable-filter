@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from metric import Metric
 from Steerable import *
-# from mlabwrap import mlab
+from mlabwrap import mlab
 
 ss = Metric()
 
@@ -58,10 +58,43 @@ ss = Metric()
 # print coeff[3].shape
 
 # TEST STSIM 
-im1 = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
-im2 = cv2.imread('images/02.tif', cv2.IMREAD_GRAYSCALE)
+# im1 = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
+# im2 = cv2.imread('images/02.tif', cv2.IMREAD_GRAYSCALE)
 
-result1 = ss.STSIM2(im1, im2)
-print result1
+# result1 = ss.STSIM2(im1, im2)
+# print result1
 
-print ss.STSIM_Maha(im1, im1)
+# print ss.STSIM_Maha(im1, im1)
+
+# TEST STeerable
+# im = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
+# ss = Steerable(height = 2)
+# coeff1 = ss.buildSFpyr(im)
+
+# coeff2 = mlab.get_pyramid_sub(im,0,4)
+
+# np.testing.assert_almost_equal(coeff2, coeff1[0])
+
+# TEST Fourier transform
+# ss = Steerable(height = 4)
+# im = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
+
+# coeff = ss.buildSFpyr(im)
+
+# lowpass = mlab.get_pyramid_sub(im, 2, 4)
+
+# np.testing.assert_almost_equal(coeff[1][1], lowpass)
+
+# M, N = im.shape[:2]
+# M = 20
+# N = 20
+# log_rad, angle = ss.base(M, N)
+# Xrcos, Yrcos = ss.rcosFn(1, -0.5)
+# Yrcos = np.sqrt(Yrcos)
+# YIrcos = np.sqrt(1 - Yrcos*Yrcos)
+
+# lo0mask = ss.pointOp(log_rad, YIrcos, Xrcos)
+
+# loMatlab = mlab.get_pyramid_noSub(M,N)
+
+# np.testing.assert_almost_equal(loMatlab, lo0mask)
