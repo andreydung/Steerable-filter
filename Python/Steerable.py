@@ -75,8 +75,11 @@ class Steerable:
 			# ================== Subsample lowpass ============================
 			dims = np.array(lodft.shape)
 			
-			lostart = np.ceil((dims+0.5)/2) - np.ceil((np.ceil((dims-0.5)/2)+0.5)/2) 
-			loend = lostart + np.ceil((dims-0.5)/2) 
+			lostart = np.ceil((dims+0.5)/2) - np.ceil((np.ceil((dims-0.5)/2)+0.5)/2)
+			loend = lostart + np.ceil((dims-0.5)/2)
+
+			lostart = lostart.astype(int)
+			loend = loend.astype(int)
 
 			log_rad = log_rad[lostart[0]:loend[0], lostart[1]:loend[1]]
 			angle = angle[lostart[0]:loend[0], lostart[1]:loend[1]]
@@ -160,8 +163,8 @@ class Steerable:
 
 
 	def base(self, m, n):
-		ctrm = np.ceil((m + 0.5)/2)
-		ctrn = np.ceil((n + 0.5)/2)
+		ctrm = np.ceil((m + 0.5)/2).astype(int)
+		ctrn = np.ceil((n + 0.5)/2).astype(int)
 
 		xv, yv = np.meshgrid(	(np.array(range(m)) + 1 - ctrm)/(m/2),\
 								(np.array(range(n)) + 1 - ctrm)/(n/2))
