@@ -42,11 +42,11 @@ class Steerable:
 	def stat_feature(self, im):
 		s = self.getlist(self.buildSFpyr(im))
 		feature = []
-		step = 16
+		step = 8
 		for index in range(len(s)):
 			subband = s[index].real
 			M, N = subband.shape
-			
+
 			# smart way to deal with arbitrary patches :">
 			for i in range(0, M + 1, step)[:-1]:
 				for j in range(0, N + 1, step)[:-1]:
@@ -55,14 +55,12 @@ class Steerable:
 					feature.append(np.mean(temp))
 					feature.append(np.var(temp))
 					
-		return np.asarray(feature)
+		return np.asarray([feature])
 
 	def buildSFpyrlevs(self, lodft, log_rad, angle, Xrcos, Yrcos, ht):
 		if (ht <=1):
 			lo0 = np.fft.ifft2(np.fft.ifftshift(lodft))
 			coeff = [lo0.real]
-
-			print lo0.real
 		
 		else:
 			Xrcos = Xrcos - 1
