@@ -39,18 +39,30 @@ class Steerable:
 		straight = [coeff[0]] + straight + [coeff[-1]]
 		return straight
 
-	def feature(self, im):
+	def stat_feature(self, im):
 		s = self.getlist(self.buildSFpyr(im))
 		feature = []
-		for i in range(len(s)):
-			feature.append(np.mean(s[i]))
-			feature.append(np.var(s[i]))
+		step = 16
+		for index in range(len(s)):
+			subband = s[index].real
+			M, N = subband.shape
+			
+			# smart way to deal with arbitrary patches :">
+			for i in range(0, M + 1, step)[:-1]:
+				for j in range(0, N + 1, step)[:-1]:
+
+					temp = subband[i : i+step, j : j+step]
+					feature.append(np.mean(temp))
+					feature.append(np.var(temp))
+					
 		return np.asarray(feature)
 
 	def buildSFpyrlevs(self, lodft, log_rad, angle, Xrcos, Yrcos, ht):
 		if (ht <=1):
 			lo0 = np.fft.ifft2(np.fft.ifftshift(lodft))
 			coeff = [lo0.real]
+
+			print lo0.real
 		
 		else:
 			Xrcos = Xrcos - 1
