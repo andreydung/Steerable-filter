@@ -3,6 +3,7 @@ import numpy as np
 from Steerable import Steerable, SteerableNoSub
 import cv2
 from scipy import signal
+import itertools
 
 def MSE(img1, img2):
 	return ((img2 - img1)**2).mean()
@@ -53,26 +54,6 @@ class Metric:
 
 		return ssim_map.mean()
 
-	def SSIM_patch(self, im1, im2, K = (0.01, 0.03), L = 255):
-		"""
-		SSIM calculate directly on patch
-		im1, im2 are masked numpy array
-		"""
-		img1 = img1.astype(float)
-		img2 = img2.astype(float)
-
-		C1 = (K[0]*L) ** 2
-		C2 = (K[1]*L) ** 2
-
-		mu1 = im1.mean()
-		mu2 = im2.mean()
-
-		var1 = im1.var()
-		var2 = im2.var()
-
-		return (2 *mu1 *mu2 + C1)/((mu1*mu1 + mu2*mu2 + C1)*(var1 + var2 + C2))
-
-
 	def conv(self, a, b):
 		"""
 		Larger matrix go first
@@ -82,6 +63,7 @@ class Metric:
 		# 	[:(a.shape[0]-b.shape[0]+1), :(a.shape[1]-b.shape[1]+1)]
 
 	def STSIM(self, im1, im2):
+		assert im1.shape == im2.shape
 		s = Steerable()
 
 		pyrA = s.getlist(s.buildSCFpyr(im1))
@@ -92,6 +74,8 @@ class Metric:
 		return np.mean(stsim)
 
 	def STSIM2(self, im1, im2):
+		assert im1.shape == im2.shape
+
 		s = Steerable()
 		s_nosub = SteerableNoSub()
 
@@ -129,12 +113,36 @@ class Metric:
 
 		return np.mean(stsim2)
 
+	def STSIM_M(self, im):
+		s = Steerable(5)
+		M, N = im.shape
+		coeff = s.buildSCFpyr(im)
 
-	def STSIM_Maha(self, im1, im2):
-		s = Steerable.Steerable()
-		featureA = s.feature(im1)
-		featureB = s.feature(im2)
-		return np.linalg.norm(featureA - featureB)
+		f = []
+		# single subband statistics
+		for s in s.getlist(coeff):
+			shiftx = np.roll(s,1, axis = 0)
+			shifty = np.roll(s,1, axis = 1)
+
+			f.append(np.mean(s))
+			f.append(np.var(s))
+			f.append((shiftx * s).mean()/s.var())
+			f.append((shifty * s).mean()/s.var())
+
+		# correlation statistics
+		# across orientations
+		for orients in coeff[1:-1]:
+			for (s1, s2) in list(itertools.combinations(orients, 2)):
+				f.append((s1*s2).mean())
+
+		for orient in range(len(coeff[1])):
+			for height in range(len(coeff) - 3):
+				s1 = coeff[height + 1][orient].real
+				s2 = coeff[height + 2][orient].real
+
+				s1 = cv2.resize(s1, (0,0), fx = 0.5, fy = 0.5)
+				f.append((s1*s2).mean()/np.sqrt(s1.var())/np.sqrt(s2.var()))
+		return np.array(f)
 
 	def pooling(self, im1, im2):
 		win = self.win
