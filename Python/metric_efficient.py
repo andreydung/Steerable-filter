@@ -127,6 +127,10 @@ class Metric:
 		return np.linalg.norm(featureA - featureB)
 
 	def pooling(self, im1, im2):
+		terms = self.construct_terms(im1, im2)
+		return terms.mean()
+
+	def construct_terms(self, im1, im2):
 		win = self.win
 		C = 0.001
 		window = fspecial(win, win/6)
@@ -175,7 +179,6 @@ class Metric:
 		rho2 = (x_sigma2_cross + C)/(np.sqrt(x_sigma21_sq)*np.sqrt(x_sigma22_sq) + C)
 		C01map = 1 - 0.5*np.abs(rho1 - rho2)
 
-
 		# C10 term
 		window2 = 1/(win*(win-1)) * np.ones((win - 1,win));
 
@@ -207,7 +210,7 @@ class Metric:
 		C10map = 1 - 0.5*np.abs(rho1 - rho2)
 
 		tmp = np.power(Lmap * Cmap * C01map * C10map , 0.25)
-		return tmp.mean()
+		return tmp
 
 		# return Lmap, Cmap, C01map, C10map
 
