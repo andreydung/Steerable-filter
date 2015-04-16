@@ -57,9 +57,19 @@ class Metric:
 		"""
 		Larger matrix go first
 		"""
-		return signal.correlate2d(a, b, mode = 'valid')
-		# return cv2.filter2D(a, -1, b, anchor = (0,0))\
-		# 	[:(a.shape[0]-b.shape[0]+1), :(a.shape[1]-b.shape[1]+1)]
+		# general solution, should run on most machine
+		# return signal.correlate2d(a, b, mode = 'valid')
+
+		# optimized solution
+		if np.isreal(a).any():
+			return cv2.filter2D(a, -1, b, anchor = (0,0))\
+				[:(a.shape[0]-b.shape[0]+1), :(a.shape[1]-b.shape[1]+1)]
+		else:
+			outreal = cv2.filter2D(a.real, -1, b, anchor = (0,0))\
+				[:(a.shape[0]-b.shape[0]+1), :(a.shape[1]-b.shape[1]+1)]
+			outimag = cv2.filter2D(a.imag, -1, b, anchor = (0,0))\
+				[:(a.shape[0]-b.shape[0]+1), :(a.shape[1]-b.shape[1]+1)]
+			return outreal + 1j* outimag
 
 	def STSIM(self, im1, im2):
 		s = Steerable()
@@ -138,62 +148,62 @@ class Metric:
 		# C01 term
 		window2 = 1/(win*(win-1)) * np.ones((win,win-1));
 
-		mu10 = self.conv(im1, window2)
-		mu20 = self.conv(im2, window2)
-		sigma10 = self.conv(np.abs(np.square(im1)), window2) - np.abs(np.square(mu10))
-		sigma20 = self.conv(np.abs(np.square(im2)), window2) - np.abs(np.square(mu20))
+		x_mu1 = self.conv(im1, window2)
+		x_mu2 = self.conv(im2, window2)
+		x_sigma1 = self.conv(np.abs(np.square(im1)), window2) - np.abs(np.square(x_mu1))
+		x_sigma2 = self.conv(np.abs(np.square(im2)), window2) - np.abs(np.square(x_mu2))
 
-		mu11 = mu10[:, :-1]
-		mu12 = mu10[:, 1:]
-		mu21 = mu20[:, :-1]
-		mu22 = mu20[:, 1:]
+		x_mu11 = x_mu1[:, :-1]
+		x_mu12 = x_mu1[:, 1:]
+		x_mu21 = x_mu2[:, :-1]
+		x_mu22 = x_mu2[:, 1:]
 
 		im11 = im1[:, :-1]
 		im12 = im1[:, 1:]
 		im21 = im2[:, :-1]
 		im22 = im2[:, 1:]
 
-		sigma11_sq = sigma10[:, :-1]
-		sigma12_sq = sigma10[:, 1:]
-		sigma21_sq = sigma20[:, :-1]
-		sigma22_sq = sigma20[:, 1:]
+		x_sigma11_sq = x_sigma1[:, :-1]
+		x_sigma12_sq = x_sigma1[:, 1:]
+		x_sigma21_sq = x_sigma2[:, :-1]
+		x_sigma22_sq = x_sigma2[:, 1:]
 
-		sigma1_cross = self.conv(im11*np.conj(im12), window2) - mu11*np.conj(mu12)
-		sigma2_cross = self.conv(im21*np.conj(im22), window2) - mu21*np.conj(mu22)
+		x_sigma1_cross = self.conv(im11*np.conj(im12), window2) - x_mu11*np.conj(x_mu12)
+		x_sigma2_cross = self.conv(im21*np.conj(im22), window2) - x_mu21*np.conj(x_mu22)
 
-		rho1 = (sigma1_cross + C)/(np.sqrt(sigma11_sq)*np.sqrt(sigma12_sq) + C)
-		rho2 = (sigma2_cross + C)/(np.sqrt(sigma21_sq)*np.sqrt(sigma22_sq) + C)
+		rho1 = (x_sigma1_cross + C)/(np.sqrt(x_sigma11_sq)*np.sqrt(x_sigma12_sq) + C)
+		rho2 = (x_sigma2_cross + C)/(np.sqrt(x_sigma21_sq)*np.sqrt(x_sigma22_sq) + C)
 		C01map = 1 - 0.5*np.abs(rho1 - rho2)
 
 
 		# C10 term
 		window2 = 1/(win*(win-1)) * np.ones((win - 1,win));
 
-		mu10 = self.conv(im1, window2)
-		mu20 = self.conv(im2, window2)
-		sigma10 = self.conv(np.abs(np.square(im1)), window2) - np.abs(np.square(mu10))
-		sigma20 = self.conv(np.abs(np.square(im2)), window2) - np.abs(np.square(mu20))
+		y_mu1 = self.conv(im1, window2)
+		y_mu2 = self.conv(im2, window2)
+		y_sigma1 = self.conv(np.abs(np.square(im1)), window2) - np.abs(np.square(y_mu1))
+		y_sigma2 = self.conv(np.abs(np.square(im2)), window2) - np.abs(np.square(y_mu2))
 
-		mu11 = mu10[:-1, :]
-		mu12 = mu10[1:, :]
-		mu21 = mu20[:-1, :]
-		mu22 = mu20[1:, :]
+		y_mu11 = y_mu1[:-1, :]
+		y_mu12 = y_mu1[1:, :]
+		y_mu21 = y_mu2[:-1, :]
+		y_mu22 = y_mu2[1:, :]
 
 		im11 = im1[:-1, :]
 		im12 = im1[1:, :]
 		im21 = im2[:-1, :]
 		im22 = im2[1:, :]
 
-		sigma11_sq = sigma10[:-1, :]
-		sigma12_sq = sigma10[1:, :]
-		sigma21_sq = sigma20[:-1, :]
-		sigma22_sq = sigma20[1:, :]
+		y_sigma11_sq = y_sigma1[:-1, :]
+		y_sigma12_sq = y_sigma1[1:, :]
+		y_sigma21_sq = y_sigma2[:-1, :]
+		y_sigma22_sq = y_sigma2[1:, :]
 
-		sigma1_cross = self.conv(im11*np.conj(im12), window2) - mu11*np.conj(mu12)
-		sigma2_cross = self.conv(im21*np.conj(im22), window2) - mu21*np.conj(mu22)
+		y_sigma1_cross = self.conv(im11*np.conj(im12), window2) - y_mu11*np.conj(y_mu12)
+		y_sigma2_cross = self.conv(im21*np.conj(im22), window2) - y_mu21*np.conj(y_mu22)
 
-		rho1 = (sigma1_cross + C)/(np.sqrt(sigma11_sq)*np.sqrt(sigma12_sq) + C)
-		rho2 = (sigma2_cross + C)/(np.sqrt(sigma21_sq)*np.sqrt(sigma22_sq) + C)
+		rho1 = (y_sigma1_cross + C)/(np.sqrt(y_sigma11_sq)*np.sqrt(y_sigma12_sq) + C)
+		rho2 = (y_sigma2_cross + C)/(np.sqrt(y_sigma21_sq)*np.sqrt(y_sigma22_sq) + C)
 		C10map = 1 - 0.5*np.abs(rho1 - rho2)
 
 		tmp = np.power(Lmap * Cmap * C01map * C10map , 0.25)
