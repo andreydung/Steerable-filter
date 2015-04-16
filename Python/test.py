@@ -12,7 +12,7 @@ class TestSteerableNoSub(unittest.TestCase):
 		s = SteerableNoSub(Nsc + 2)
 
 		# Test lowpass and highpass
-		im = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
+		im = cv2.imread('images/0.tiff', cv2.IMREAD_GRAYSCALE)
 		coeff1 = s.buildSCFpyr(im)
 
 		# Highpass
@@ -40,7 +40,7 @@ class TestSteerable(unittest.TestCase):
 		self.assertEqual(np.allclose(out, im, atol = 10), True)
 
 	def testutility(self):
-		im = cv2.imread('images/05.tif', cv2.IMREAD_GRAYSCALE)
+		im = cv2.imread('images/2.tiff', cv2.IMREAD_GRAYSCALE)
 		a = Steerable()
 		coeff = a.buildSCFpyr(im)
 
@@ -62,7 +62,7 @@ class TestSteerable(unittest.TestCase):
 		s = Steerable(Nsc + 2)
 
 		# Test lowpass and highpass
-		im = cv2.imread('images/11.tif', cv2.IMREAD_GRAYSCALE)
+		im = cv2.imread('images/1.tiff', cv2.IMREAD_GRAYSCALE)
 		coeff1 = s.buildSCFpyr(im)
 
 		# Highpass
@@ -83,8 +83,8 @@ class TestMetric(unittest.TestCase):
 
 	def testMetric(self):
 		ss = Metric()
-		im1 = cv2.imread('images/12.tif', cv2.IMREAD_GRAYSCALE).astype(float)
-		im2 = cv2.imread('images/02.tif', cv2.IMREAD_GRAYSCALE).astype(float)
+		im1 = cv2.imread('images/2.tiff', cv2.IMREAD_GRAYSCALE).astype(float)
+		im2 = cv2.imread('images/3.tiff', cv2.IMREAD_GRAYSCALE).astype(float)
 
 		a1 = ss.STSIM(im1, im2)
 		a2 = mlab.stsim(im1, im2)
@@ -97,10 +97,10 @@ class TestMetric(unittest.TestCase):
 	def testHelpers(self):
 
 		ss = Metric()
-		im1 = cv2.imread('images/08.tif', cv2.IMREAD_GRAYSCALE).astype(float)
-		im2 = cv2.imread('images/10.tif', cv2.IMREAD_GRAYSCALE).astype(float)
-		im3 = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE).astype(float)
-		im4 = cv2.imread('images/07.tif', cv2.IMREAD_GRAYSCALE).astype(float)
+		im1 = cv2.imread('images/0.tiff', cv2.IMREAD_GRAYSCALE).astype(float)
+		im2 = cv2.imread('images/1.tiff', cv2.IMREAD_GRAYSCALE).astype(float)
+		im3 = cv2.imread('images/2.tiff', cv2.IMREAD_GRAYSCALE).astype(float)
+		im4 = cv2.imread('images/3.tiff', cv2.IMREAD_GRAYSCALE).astype(float)
 
 		win = 7
 
