@@ -1,6 +1,6 @@
 from __future__ import division
 import numpy as np
-from filterbank import Steerable, SteerableNoSub
+from perceptual.filterbank import Steerable, SteerableNoSub
 import cv2
 from scipy import signal
 import itertools
@@ -257,3 +257,4 @@ class Metric:
 
 		Crossmap = 1 - 0.5*abs(rho1 - rho2);
 		return Crossmap
+		

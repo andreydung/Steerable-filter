@@ -1,7 +1,7 @@
-from Steerable import *
+from perceptual.filterbank import Steerable
 import cv2
 
-im = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
+im = cv2.imread('images/02-112.png', cv2.IMREAD_GRAYSCALE)
 
 # Build a complex steerable pyramid 
 # with height 5 (including lowpass and highpass)
@@ -17,7 +17,7 @@ coeff = s.buildSCFpyr(im)
 cv2.imwrite("subbband.png", coeff[1][0].real)
 
 # or visualization of whole decomposition
-cv2.imwrite("coeff.png", visualize(coeff))
+# cv2.imwrite("coeff.png", visualize(coeff))
 
 # reconstruction
 out = s.reconSCFpyr(coeff)

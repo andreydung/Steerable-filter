@@ -1,8 +1,8 @@
-from metric import Metric
+from perceptual.metric import Metric
 import cv2
 
-im1 = cv2.imread('images/01.tif', cv2.IMREAD_GRAYSCALE)
-im2 = cv2.imread('images/03.tif', cv2.IMREAD_GRAYSCALE)
+im1 = cv2.imread('images/02-112.png', cv2.IMREAD_GRAYSCALE)
+im2 = cv2.imread('images/02-149.png', cv2.IMREAD_GRAYSCALE)
 
 m = Metric()
 
