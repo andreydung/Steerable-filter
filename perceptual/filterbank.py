@@ -137,7 +137,7 @@ class Steerable:
 			lutsize = 1024
 			Xcosn = np.pi * np.array(range(-(2*lutsize+1),(lutsize+2)))/lutsize
 			order = self.nbands - 1
-			const = np.power(2, 2*order) * np.square(sc.factorial(order)) / (self.nbands * sc.factorial(2*order))
+			const = np.power(2, 2*order) * np.square(factorial(order)) / (self.nbands * factorial(2*order))
 			Ycosn = np.sqrt(const) * np.power(np.cos(Xcosn), order)
 
 			orientdft = np.zeros(coeff[0][0].shape)
@@ -238,7 +238,7 @@ class SteerableNoSub(Steerable):
 			lutsize = 1024
 			Xcosn = np.pi * np.array(range(-(2*lutsize+1),(lutsize+2)))/lutsize
 			order = self.nbands - 1
-			const = np.power(2, 2*order) * np.square(sc.factorial(order)) / (self.nbands * sc.factorial(2*order))
+			const = np.power(2, 2*order) * np.square(factorial(order)) / (self.nbands * factorial(2*order))
 
 			alpha = (Xcosn + np.pi) % (2*np.pi) - np.pi
 			Ycosn = 2*np.sqrt(const) * np.power(np.cos(Xcosn), order) * (np.abs(alpha) < np.pi/2)
